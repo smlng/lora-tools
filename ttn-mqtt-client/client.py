@@ -16,22 +16,22 @@ def uplink_callback(msg, client):
     logging.info("Uplink message")
     logging.info("  FROM: ", msg.dev_id)
     logging.info("  TIME: ", msg.metadata.time)
-    logging.debug("   RAW: ", msg.payload_raw)
+    logging.info("   RAW: ", msg.payload_raw)
     frame = LppFrame.from_base64(msg.payload_raw)
 
     if out_json:
-        print("[")
+        out = []
         for d in frame.data:
-            print("{'channel': {}, 'type': {}, 'value': {}},".format(d.channel, d.type, d.value))
-        print("]")    
+            out.append({'channel': d.channel, 'type': d.type, 'value': d.value})
+        print(json.dumps(out))
     else:
         print(frame)
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('app',      help='The TTN application id.', type=str)
-    parser.add_argument('key',      help='The secret TTN application key.', type=str)
+    parser.add_argument('app',      help='The TTN application name.', type=str)
+    parser.add_argument('key',      help='The TTN application (secret) key.', type=str)
     parser.add_argument('--json',   help='Set output format to JSON.', action='store_true')
     args = parser.parse_args()
 
