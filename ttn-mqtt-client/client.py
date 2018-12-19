@@ -2,45 +2,53 @@
 import argparse
 import json
 import logging
-import os
 import time
 import ttn
 
 from cayennelpp import LppFrame
 
 
-out_json = False
+OUT_JSON = False
 
 
-def uplink_callback(msg, client):
+def uplink_callback(msg):
+    """
+    MQTT receive callback
+    """
     logging.info("Uplink message")
-    logging.info("  FROM: ", msg.dev_id)
-    logging.info("  TIME: ", msg.metadata.time)
-    logging.info("   RAW: ", msg.payload_raw)
+    logging.info("  FROM: %s", str(msg.dev_id))
+    logging.info("  TIME: %s", str(msg.metadata.time))
+    logging.info("   RAW: %s", str(msg.payload_raw))
     frame = LppFrame.from_base64(msg.payload_raw)
 
-    if out_json:
+    if OUT_JSON:
         out = []
-        for d in frame.data:
-            out.append({'channel': d.channel, 'type': d.type, 'value': d.value})
+        for item in frame.data:
+            out.append({'channel': item.channel, 'type': item.type, 'value': item.value})
         print(json.dumps(out))
     else:
         print(frame)
 
 
 def main():
+    """
+    The main loop
+    """
     parser = argparse.ArgumentParser()
-    parser.add_argument('app',      help='The TTN application name.', type=str)
-    parser.add_argument('key',      help='The TTN application (secret) key.', type=str)
-    parser.add_argument('--json',   help='Set output format to JSON.', action='store_true')
+    parser.add_argument('app', help='The TTN application name.',
+                        type=str)
+    parser.add_argument('key', help='The TTN application (secret) key.',
+                        type=str)
+    parser.add_argument('--json', help='Set output format to JSON.',
+                        action='store_true')
     args = parser.parse_args()
 
-    logging.debug("APP ID:  ", args.app)
-    logging.debug("APP KEY: ", args.key)
-    logging.debug("OUTJSON: ", str(args.json))
-    global out_json
-    out_json = args.json
-    
+    logging.debug("APP ID:  %s", args.app)
+    logging.debug("APP KEY: %s", args.key)
+    logging.debug("OUTJSON: %s", str(args.json))
+    global OUT_JSON
+    OUT_JSON = args.json
+
     ttncli = ttn.HandlerClient(args.app, args.key)
 
     mqttcli = ttncli.data()
